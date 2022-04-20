@@ -16,11 +16,13 @@ explain有两种扩展(<5.7), 一个是`explain extend`, 结果增加了filtered
 # explain解析结果
 ![图3](http://wyett.github.io/assets/img/mysql_explain/QQ截图20220420150241.png)
 explain的解析结果，默认有12列，加不同的扩展参数，展现结果不同。其中，如下列示意相对简单
+~~~
 **id**：子句执行顺序，id大的先执行，id相同的从上往下按顺序执行
 **table**: 表名或者表的alias，`<derivedN>`，`<union m,n>`, `subqueryN`
 **partitions**：分区
 **posible_key**: 查询优化器评估了哪些索引；
 **key**：最终选择的索引
+~~~
 
 还有如下两列需要进一步计算，可以获取有用信息
 **key_len**：
