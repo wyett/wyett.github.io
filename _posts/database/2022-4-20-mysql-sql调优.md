@@ -71,7 +71,7 @@ explain select (select 1 from employees) from (select name from employees where 
 - ref_or_null<==>ref
 - unique_subquery/index_subquery<==>eq_ref
 一般需要尽量控制在range，最好是ref
-
+~~~
 | type值          |            | 简介                                                         |
 | :--------------- | :---------- | :------------------------------------------------------------ |
 | system          | 常量       | 表内只有一条数据，且与条件匹配                               |
@@ -86,7 +86,7 @@ explain select (select 1 from employees) from (select name from employees where 
 | index_subquery  | 子查询     | 在子查询种，基于非唯一索引进行扫描                           |
 | index_merge     | 索引合并   | 有多个索引可用时，对结果进行合并，去重等等。应该避免         |
 | fulltext        |            | FT，全文检索                                                 |
-
+~~~
 > type为index和覆盖索引是类似的场景，区别在于：
 >
 > - type为index，扫描了索引里的每条数据，没有范围判断，效率也不是很高；是覆盖索引中最慢的一类
