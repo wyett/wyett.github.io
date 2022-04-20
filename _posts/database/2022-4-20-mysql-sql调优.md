@@ -5,21 +5,21 @@ tags:
 - mysql
 ---
 
-## explain结果解析
+# explain语法
 
 
 
 explain有两种扩展(<5.7), 一个是`explain extend`, 结果增加了filtered列；另一个是`explain partitions`，结果增加了partitions列；
 
-![图1](image-20210701165349233.png)
+![图1](https://wyett.github.io/assets/img/mysql_explain/image-20210701165349233.png)
 
 在mysql 5.7版本中，又增加了`format=json`选项，将explain结果通过json格式显示；同时也支持支持对select/update/delete/replace等不同的DML操作进行分析。
 
-![图2](image-20210701165447077.png)
+![图2](https://wyett.github.io/assets/img/mysql_explain/image-20210701165447077.png)
 
 
 
-### 解析结果
+# explain解析结果
 
 - **id**：子句执行顺序，id大的先执行，id相同的从上往下按顺序执行
 
@@ -91,7 +91,7 @@ set session optimizer_switch='derived_merge=off';
 explain select (select 1 from employees) from (select name from employees where id>10 limit 100) t;
 ```
 
-![图3](image-20210701170949674.png)
+![图3](https://wyett.github.io/assets/img/mysql_explain/image-20210701170949674.png)
 
 
 
@@ -99,7 +99,7 @@ explain select (select 1 from employees) from (select name from employees where 
 - materialized：物化子查询，第一次select把子查询结果生成临时表，以后有相同的则访问临时表；
 - 还有一些其他的，最常见的是上面这几类
 
-![图4](image-20210616201847992.png)
+![图4](https://wyett.github.io/assets/img/mysql_explain/image-20210616201847992.png)
 
 **type**
 
@@ -130,7 +130,7 @@ explain select (select 1 from employees) from (select name from employees where 
 >
 > - type为index，扫描了索引里的每条数据，没有范围判断，效率也不是很高；是覆盖索引中最慢的一类
 
-![图5](image-20210705110135436.png)
+![图5](https://wyett.github.io/assets/img/mysql_explain/image-20210705110135436.png)
 
 
 
@@ -155,7 +155,7 @@ explain select (select 1 from employees) from (select name from employees where 
 explain select * from employees where name='wyett2'\G
 ```
 
-![图6](image-20210701172508950.png)
+![图6](https://wyett.github.io/assets/img/mysql_explain/image-20210701172508950.png)
 
 
 
@@ -165,7 +165,7 @@ explain select * from employees where name='wyett2'\G
 explain select * from employees where name='wyett2' and age >20\G;
 ```
 
-![图7](image-20210701172838319.png)
+![图7](https://wyett.github.io/assets/img/mysql_explain/image-20210701172838319.png)
 
 
 
@@ -176,7 +176,7 @@ alter table employees drop index idx_name_age_position;
 explain select * from employees where name='wyett2'\G;
 ```
 
-![图8](image-20210701173138013.png)
+![图8](https://wyett.github.io/assets/img/mysql_explain/image-20210701173138013.png)
 
 
 
@@ -190,13 +190,13 @@ alter table employees drop index idx_name_age_position;
 explain select distinct(name) from employees where hire_time >= '2021-06-17 9:37:00'\G;
 ```
 
-![图9](image-20210701174045514.png)
+![图9](https://wyett.github.io/assets/img/mysql_explain/image-20210701174045514.png)
 
 ```sql
 explain select distinct(hire_time) from employees where hire_time >= '2021-06-17 9:37:00'\G;
 ```
 
-![图10](image-20210701174143153.png)
+![图10](https://wyett.github.io/assets/img/mysql_explain/image-20210701174143153.png)
 
 
 
@@ -210,7 +210,7 @@ explain select distinct(hire_time) from employees where hire_time >= '2021-06-17
 explain select * from employees where hire_time >= '2021-06-17 9:37:00' order by name\G;
 ```
 
-![图11](image-20210701174514409.png)
+![图11](https://wyett.github.io/assets/img/mysql_explain/image-20210701174514409.png)
 
 
 
@@ -226,7 +226,7 @@ explain select * from employees where hire_time >= '2021-06-17 9:37:00' order by
 explain select * from t1 inner join t2 on t1.b= t2.b
 ```
 
-![图12](image-20210621111433728.png)
+![图12](https://wyett.github.io/assets/img/mysql_explain/image-20210621111433728.png)
 
 
 
