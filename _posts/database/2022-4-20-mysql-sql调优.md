@@ -33,10 +33,10 @@ explain的解析结果，默认有12列，加不同的扩展参数，展现结�
 - 常见的数据类型长度
   - date(3)/datetime(8)和timestamp(4)
 ~~~
-| type             | 字节                      |
+| type              | 字节                       |
 | :---------------- | :------------------------- |
-| datetime(非毫秒) | <5.6(8字节)；>=5.6(5字节) |
-| datetime(毫秒)   | 毫秒1字节，微秒2字节      |
+| datetime(非毫秒)  | <5.6(8字节)；>=5.6(5字节)  |
+| datetime(毫秒)    | 毫秒1字节，微秒2字节       |
 ~~~
   - int(4byte)/bigint(8byte)/tinyint(1byte)/smallint(2byte)
   - varchar/char
@@ -64,11 +64,12 @@ explain的解析结果，默认有12列，加不同的扩展参数，展现结�
 set session optimizer_switch='derived_merge=off';
 explain select (select 1 from employees) from (select name from employees where id>10 limit 100) t;
 ```
-![图4](http://wyett.github.io/assets/img/mysql_explain/image-20210701170949674.png)
+![图4](http://wyett.github.io/assets/img/mysql_explain/image-20210616201610828.png)
 
 - union：union之后的select子句
 - materialized：物化子查询，第一次select把子查询结果生成临时表，以后有相同的则访问临时表；
 - 还有一些其他的，最常见的是上面这几类
+![图5](http://wyett.github.io/assets/img/mysql_explain/image-20210616201847992.png)
 
 **type**
 `type`列表示关联类型/访问类型，一般来讲，性能从优到差：system > const > eq_ref > ref  >range > index > ALL，有几个特殊的
@@ -95,7 +96,7 @@ explain select (select 1 from employees) from (select name from employees where 
 >
 > - type为index，扫描了索引里的每条数据，没有范围判断，效率也不是很高；是覆盖索引中最慢的一类
 
-![图5](http://wyett.github.io/assets/img/mysql_explain/image-20210705110135436.png)
+![图6](http://wyett.github.io/assets/img/mysql_explain/image-20210705110135436.png)
 
 
 **ref**
@@ -115,20 +116,20 @@ explain select (select 1 from employees) from (select name from employees where 
 ```sql
 explain select * from employees where name='wyett2'\G
 ```
-![图6](http://wyett.github.io/assets/img/mysql_explain/image-20210701172508950.png)
+![图7](http://wyett.github.io/assets/img/mysql_explain/image-20210701172508950.png)
 
 - `Using index condition` ：查询的列不完全被索引覆盖，where条件中有前缀列的范围扫描，或者like。 
 ```sql
 explain select * from employees where name='wyett2' and age >20\G;
 ```
-![图7](http://wyett.github.io/assets/img/mysql_explain/image-20210701172838319.png)
+![图8](http://wyett.github.io/assets/img/mysql_explain/image-20210701172838319.png)
 
 - `Using where`：使用 where 语句来处理结果，并且查询的列未被索引覆盖。<font color="red">优化标记</font>
 ```sql
 alter table employees drop index idx_name_age_position;
 explain select * from employees where name='wyett2'\G;
 ```
-![图8](http://wyett.github.io/assets/img/mysql_explain/image-20210701173138013.png)
+![图9](http://wyett.github.io/assets/img/mysql_explain/image-20210701173138013.png)
 
 
 - Using  temporary：需要创建一张临时表来处理查询。<font color="red">优化标记</font>
@@ -137,12 +138,12 @@ alter table employees add index idx_hire_time(hire_time);
 alter table employees drop index idx_name_age_position;
 explain select distinct(name) from employees where hire_time >= '2021-06-17 9:37:00'\G;
 ```
-![图9](http://wyett.github.io/assets/img/mysql_explain/image-20210701174045514.png)
+![图10](http://wyett.github.io/assets/img/mysql_explain/image-20210701174045514.png)
 
 ```sql
 explain select distinct(hire_time) from employees where hire_time >= '2021-06-17 9:37:00'\G;
 ```
-![图10](http://wyett.github.io/assets/img/mysql_explain/image-20210701174143153.png)
+![图11](http://wyett.github.io/assets/img/mysql_explain/image-20210701174143153.png)
 
 
 
@@ -152,7 +153,7 @@ explain select distinct(hire_time) from employees where hire_time >= '2021-06-17
 ```sql
 explain select * from employees where hire_time >= '2021-06-17 9:37:00' order by name\G;
 ```
-![图11](http://wyett.github.io/assets/img/mysql_explain/image-20210701174514409.png)
+![图12](http://wyett.github.io/assets/img/mysql_explain/image-20210701174514409.png)
 
 >把排序列加入索引，并且放在索引的后面，一般是最后一列
 
@@ -161,7 +162,7 @@ explain select * from employees where hire_time >= '2021-06-17 9:37:00' order by
 ```sql
 explain select * from t1 inner join t2 on t1.b= t2.b
 ```
-![图12](http://wyett.github.io/assets/img/mysql_explain/image-20210621111433728.png)
+![图13](http://wyett.github.io/assets/img/mysql_explain/image-20210621111433728.png)
 
 
 
@@ -169,3 +170,32 @@ explain select * from t1 inner join t2 on t1.b= t2.b
 >
 > - 指明优化方向的：extra，type
 > - 在ref为NULL时，通过key_len，判断使用了哪些前缀索引列
+
+# 索引信息统计
+![图14](http://wyett.github.io/assets/img/mysql_explain/image-20210617125056754.png)
+
+- Non_unique：0表示唯一，1表示非唯一
+- seq_in_index：如果是组合索引，从1开始递增；
+- collation：A(asc)/NULL
+- Cardinality： `An estimate of the number of unique values in the index `通过`anlyze table`更新这个值
+- sub_part：前缀索引，NULL表示整列都在索引中
+- packed：是否packed
+- index_type： `BTREE`, `FULLTEXT`, `HASH`, `RTREE` 
+
+
+# profiling
+
+profiling可以直观反馈，SQL再执行过程中，哪个步骤耗时长。首先需要开启profiling
+```sql
+mysql> SET profiling=1;
+mysql> select * from employees where name = 'LiLei' or name = 'HanMeimei';
+mysql> show profile cpu, block io for query 1;
+```
+或者
+```sql
+select STATE, FORMAT(DURATION, 6) AS DURATION from INFORMATION_SCHEMA.PROFILING where QUERY_ID = 1 ORDER BY SEQ;
+```
+mysql 5.6版本之后，还可以通过查询系统表来查看profile结果
+```sql
+select * from performance_schema.events_statements_summary_by_digest order by last_SEEN desc limit 10;
+```
